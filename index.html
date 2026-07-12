@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Doctor Match</title>
+  <style>
+    :root {
+      --bg: #f0f4f8; --card: #ffffff; --text: #1a202c; --subtext: #718096;
+      --border: #e2e8f0; --accent: #3182ce; --accent-hover: #2c5282;
+      --accent-light: #ebf8ff; --input-bg: #ffffff; --shadow: rgba(0,0,0,0.08);
+      --tag-bg: #edf2f7; --high: #2f855a; --high-bg: #f0fff4;
+      --medium: #b7791f; --medium-bg: #fffaf0; --low: #718096; --low-bg: #f7fafc;
+    }
+    [data-theme="dark"] {
+      --bg: #0f1117; --card: #1a202c; --text: #e2e8f0; --subtext: #a0aec0;
+      --border: #2d3748; --accent: #63b3ed; --accent-hover: #3182ce;
+      --accent-light: #1a365d; --input-bg: #2d3748; --shadow: rgba(0,0,0,0.4);
+      --tag-bg: #2d3748; --high: #68d391; --high-bg: #1c3a2b;
+      --medium: #f6ad55; --medium-bg: #3a2f1c; --low: #a0aec0; --low-bg: #2d3748;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg); min-height: 100vh; padding: 32px 16px;
+      color: var(--text); transition: background 0.3s;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .header h1 { font-size: 1.8rem; }
+    .header h1 span { color: var(--accent); }
+    .dark-btn {
+      background: none; border: 2px solid var(--border); border-radius: 8px;
+      padding: 6px 10px; cursor: pointer; font-size: 1.1rem; color: var(--text);
+    }
+    .dark-btn:hover { border-color: var(--accent); }
+    .subtitle { color: var(--subtext); font-size: 0.9rem; margin-bottom: 24px; }
+
+    .search-card {
+      background: var(--card); border-radius: 14px; padding: 24px;
+      box-shadow: 0 4px 20px var(--shadow); margin-bottom: 24px;
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 100px; gap: 12px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 0.8rem; font-weight: 600; color: var(--subtext); }
+    input, select {
+      padding: 10px 14px; border: 2px solid var(--border); border-radius: 8px;
+      font-size: 0.95rem; background: var(--input-bg); color: var(--text);
+      outline: none; transition: border-color 0.2s; font-family: inherit;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    .btn-row { display: flex; gap: 10px; }
+    .search-btn {
+      background: var(--accent); color: white; border: none; border-radius: 8px;
+      padding: 12px 28px; font-size: 1rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s; flex: 1;
+    }
+    .search-btn:hover { background: var(--accent-hover); }
+    .search-btn:disabled { opacity: 0.6; cursor: default; }
+
+    .status { text-align: center; padding: 20px; color: var(--subtext); font-size: 0.95rem; }
+    .loading { color: var(--accent); }
+    .error { color: #e53e3e; }
+
+    .profile-card {
+      background: var(--card); border-radius: 14px; padding: 22px;
+      box-shadow: 0 4px 20px var(--shadow); margin-bottom: 16px;
+    }
+    .profile-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 12px; }
+    .profile-name { font-size: 1.2rem; font-weight: 700; }
+    .profile-npi { color: var(--subtext); font-size: 0.85rem; }
+    .badge {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+      padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+    }
+    .badge.high { color: var(--high); background: var(--high-bg); }
+    .badge.medium { color: var(--medium); background: var(--medium-bg); }
+    .badge.low { color: var(--low); background: var(--low-bg); }
+    .profile-meta { color: var(--subtext); font-size: 0.9rem; margin-bottom: 14px; }
+    .profile-meta strong { color: var(--text); }
+
+    .trial-list { display: flex; flex-direction: column; gap: 10px; }
+    .trial {
+      border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+    }
+    .trial-title-row { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .trial-title a { color: var(--accent); font-weight: 600; font-size: 0.95rem; text-decoration: none; }
+    .trial-title a:hover { text-decoration: underline; }
+    .trial-conf { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+    .trial-conf.high { color: var(--high); }
+    .trial-conf.medium { color: var(--medium); }
+    .trial-conf.low { color: var(--low); }
+    .trial-meta { color: var(--subtext); font-size: 0.85rem; margin-top: 4px; }
+    .tag { display: inline-block; background: var(--tag-bg); border-radius: 6px; padding: 1px 8px; margin: 2px 4px 2px 0; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Doctor<span>Match</span></h1>
+      <button class="dark-btn" id="darkBtn" title="Toggle dark mode">🌙</button>
+    </div>
+    <p class="subtitle">Cross-reference NPI Registry providers with ClinicalTrials.gov investigators</p>
+
+    <div class="search-card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="firstName">First name</label>
+          <input id="firstName" placeholder="e.g. Eric" />
+        </div>
+        <div class="form-group">
+          <label for="lastName">Last name</label>
+          <input id="lastName" placeholder="e.g. Topol" />
+        </div>
+        <div class="form-group">
+          <label for="state">State</label>
+          <input id="state" placeholder="CA" maxlength="2" />
+        </div>
+        <div class="form-group full">
+          <label for="minConfidence">Minimum match confidence</label>
+          <select id="minConfidence">
+            <option value="low">Low and above (broadest)</option>
+            <option value="medium">Medium and above</option>
+            <option value="high">High only (strictest)</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="search-btn" id="searchBtn">Search</button>
+      </div>
+    </div>
+
+    <div id="status" class="status" style="display:none;"></div>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      $('darkBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+      localStorage.setItem('doctor-match-theme', theme);
+    }
+    const savedTheme = localStorage.getItem('doctor-match-theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(savedTheme);
+    $('darkBtn').addEventListener('click', () => {
+      applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+
+    function escapeHtml(s) {
+      return (s || '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function renderProfile(p) {
+      const trials = p.trials.map(t => `
+        <div class="trial">
+          <div class="trial-title-row">
+            <div class="trial-title"><a href="https://clinicaltrials.gov/study/${escapeHtml(t.nct_id)}" target="_blank" rel="noopener">${escapeHtml(t.nct_id)}: ${escapeHtml(t.title)}</a></div>
+            <div class="trial-conf ${t.confidence}">${t.confidence}</div>
+          </div>
+          <div class="trial-meta">
+            ${(t.conditions || []).map(c => `<span class="tag">${escapeHtml(c)}</span>`).join('')}
+          </div>
+          <div class="trial-meta">Phase: ${escapeHtml(t.phase) || 'n/a'} &nbsp;|&nbsp; Status: ${escapeHtml(t.status)}</div>
+        </div>
+      `).join('');
+
+      return `
+        <div class="profile-card">
+          <div class="profile-top">
+            <div>
+              <div class="profile-name">${escapeHtml(p.name)}</div>
+              <div class="profile-npi">NPI ${escapeHtml(p.npi)}</div>
+            </div>
+            <div class="badge ${p.match_confidence}">${p.match_confidence} confidence</div>
+          </div>
+          <div class="profile-meta">
+            <strong>${escapeHtml(p.specialty) || 'Specialty n/a'}</strong> &middot;
+            ${escapeHtml(p.practice_city)}, ${escapeHtml(p.practice_state)}
+          </div>
+          <div class="trial-list">${trials}</div>
+        </div>
+      `;
+    }
+
+    async function runSearch() {
+      const firstName = $('firstName').value.trim();
+      const lastName = $('lastName').value.trim();
+      const state = $('state').value.trim();
+      const minConfidence = $('minConfidence').value;
+
+      const statusEl = $('status');
+      const resultsEl = $('results');
+      resultsEl.innerHTML = '';
+
+      if (!firstName || !lastName) {
+        statusEl.style.display = 'block';
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Enter both a first and last name.';
+        return;
+      }
+
+      statusEl.style.display = 'block';
+      statusEl.className = 'status loading';
+      statusEl.textContent = 'Searching NPI Registry and ClinicalTrials.gov...';
+      $('searchBtn').disabled = true;
+
+      const qs = new URLSearchParams({ first_name: firstName, last_name: lastName, min_confidence: minConfidence });
+      if (state) qs.set('state', state);
+
+      try {
+        const resp = await fetch(`/api/match?${qs.toString()}`);
+        const data = await resp.json();
+        $('searchBtn').disabled = false;
+
+        if (data.error) {
+          statusEl.className = 'status error';
+          statusEl.textContent = data.error;
+          return;
+        }
+
+        if (!data.profiles.length) {
+          statusEl.className = 'status';
+          statusEl.textContent = 'No matches found.';
+          return;
+        }
+
+        statusEl.style.display = 'none';
+        resultsEl.innerHTML = data.profiles.map(renderProfile).join('');
+      } catch (e) {
+        $('searchBtn').disabled = false;
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Request failed: ' + e.message;
+      }
+    }
+
+    $('searchBtn').addEventListener('click', runSearch);
+    [$('firstName'), $('lastName'), $('state')].forEach(el => {
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
+    });
+  </script>
+</body>
+</html>
